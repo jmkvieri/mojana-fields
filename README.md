@@ -1,4 +1,4 @@
-# lamojana (Collective labour and sustainability of pre-Hispanic field systems in La Mojana)
+# mojana-fields (Collective labour and sustainability of pre-Hispanic field systems in La Mojana)
 
 This repository contains the data and scripts used in the manuscript:
 
