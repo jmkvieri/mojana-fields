@@ -77,8 +77,8 @@ e <- ggplot() +
   scale_size_continuous(range = c(0.2, 5))
 
 # Save the figure
-ggsave(here("outputs","figures","figure_5.png"), plot = e, dpi = 300)
-png(here("outputs","figures","figure_5.png"), width = 3000, height = 1500, res = 300)
+ggsave(here("outputs","figures","fig5.png"), plot = e, dpi = 300)
+png(here("outputs","figures","fig5.png"), width = 3000, height = 1500, res = 300)
 print(e)
 dev.off()
 
