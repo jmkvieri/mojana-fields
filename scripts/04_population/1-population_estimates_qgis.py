@@ -27,7 +27,7 @@ polygon_layer = QgsVectorLayer(polygon_layer_path, "Polygon Layer", "ogr")
 # Create output memory layer with same CRS + polygon geometry
 out_layer = QgsVectorLayer(
     f"Polygon?crs={polygon_layer.crs().authid()}",
-    "Camellones Houses Pop",
+    "Houses Pop",
     "memory",
 )
 prov = out_layer.dataProvider()

@@ -10,161 +10,72 @@ combined <- merge(volume_results,cluster_results,by="polygon_id")
 # load pop estimates
 pop_est <- read.csv(here("outputs","data","platforms_houses_pop.csv"))
 
+# Helper rounding function:
+# < 10  -> 1 decimal
+# >= 10 -> 0 decimals
+smart_round <- function(x) ifelse(abs(x) < 10, round(x, 1), round(x, 0))
 
 # Load and prepare combined
-combined <- combined[!is.na(combined$total_volume),]
-combined$cluster_id <- factor(combined$cluster_id, levels = c(1,2,3,4))
+# combined <- read.csv("./combined/camellones_with_auto_clusters.csv")
+
+combined <- combined[!is.na(combined$total_volume) & !combined$total_volume == 0, ]
+combined$cluster_id <- factor(combined$cluster_id, levels = c(1, 2, 3, 4))
 combined$cluster_id <- droplevels(combined$cluster_id)
 
-# --- NEW: formatter for months ---
-fmt_month <- function(x) {
-  ifelse(x < 5,
-         sprintf("%.1f", round(x, 1)),  # one decimal if < 5
-         sprintf("%.0f", round(x, 0)))  # no decimals otherwise
-}
-
-# ----------------------------------
-
 # Create list of clusters
-clusters <- list()
-for (i in levels(combined$cluster_id)) {
-  clusters[[i]] <- subset(combined, combined$cluster_id == i)
-}
+clusters <- lapply(levels(combined$cluster_id), function(i) subset(combined, cluster_id == i))
 
-# Initialize summary combined frame
+# Initialize expanded summary combined frame
 summary_df <- data.frame(
-  camellon_type = character(),
-  quantity = numeric(),
-  combined_volume = numeric(),
-  person_days = numeric(),
-  person_weeks = numeric(),
-  person_months = numeric(),
-  family_days = numeric(),
-  family_weeks = numeric(),
-  family_months = numeric(),
-  community_days = numeric(),
-  community_weeks = numeric(),
-  community_months = numeric(),
+  camellon_type   = character(),
+  summary         = character(),
+  volume          = numeric(),
+  person_days     = character(),
+  family_days     = character(),
+  community_days  = character(),
   stringsAsFactors = FALSE
 )
 
-# Populate summary combined frame
+# Populate summary combined frame with min, median, and max for each cluster
 for (i in 1:4) {
-  total_volume <- sum(clusters[[i]]$total_volume)
-  quantity <- nrow(clusters[[i]])
-  camellon_type <- as.character(unique(clusters[[i]]$cluster_id))
+  cluster_combined <- clusters[[i]]
+  volumes <- cluster_combined$total_volume
+  camellon_type <- as.character(unique(cluster_combined$cluster_id))
   
-  person_min <- total_volume / 5
-  person_max <- total_volume / 2.5
-  family_min <- person_min / 5
-  family_max <- person_max / 5
-  community_min <- person_min / sum(pop_est$pop) / 2
-  community_max <- person_max / sum(pop_est$pop) / 2
+  stats <- list(
+    minimum = min(volumes),
+    median  = median(volumes),
+    maximum = max(volumes)
+  )
   
-  # months values (numeric)
-  person_m_min <- person_min / 30
-  person_m_max <- person_max / 30
-  family_m_min <- family_min / 30
-  family_m_max <- family_max / 30
-  community_m_min <- community_min / 30
-  community_m_max <- community_max / 30
-  
-  summary_df[i, ] <- list(
-    camellon_type,
-    quantity,
-    round(total_volume, 0),
-    paste(round(person_min, 0), "-", round(person_max, 0)),
-    paste(round(person_min / 7, 0), "-", round(person_max / 7, 0)),
-    # --- CHANGED: use fmt_month for months ---
-    paste(fmt_month(person_m_min), "-", fmt_month(person_m_max)),
-    # -----------------------------------------
-    paste(round(family_min, 0), "-", round(family_max, 0)),
-    paste(round(family_min / 7, 0), "-", round(family_max / 7, 0)),
-    paste(fmt_month(family_m_min), "-", fmt_month(family_m_max)),
-    paste(round(community_min, 0), "-", round(community_max, 0)),
-    paste(round(community_min / 7, 0), "-", round(community_max / 7, 0)),
-    paste(fmt_month(community_m_min), "-", fmt_month(community_m_max))
-  )
-}
-
-# Build the final table from summary_df
-df <- data.frame(
-  camellon_type = character(),
-  quantity = character(),
-  combined_volume = character(),
-  unit = character(),
-  person = character(),
-  family = character(),
-  community = character(),
-  stringsAsFactors = FALSE
-)
-
-for (i in 1:nrow(summary_df)) {
-  # Days
-  df[nrow(df) + 1, ] <- c(
-    summary_df$camellon_type[i],
-    summary_df$quantity[i],
-    summary_df$combined_volume[i],
-    "Days",
-    summary_df$person_days[i],
-    summary_df$family_days[i],
-    summary_df$community_days[i]
-  )
-  # Weeks
-  df[nrow(df) + 1, ] <- c(
-    summary_df$camellon_type[i],
-    "", "", "Weeks",
-    summary_df$person_weeks[i],
-    summary_df$family_weeks[i],
-    summary_df$community_weeks[i]
-  )
-  # Months
-  df[nrow(df) + 1, ] <- c(
-    summary_df$camellon_type[i],
-    "", "", "Months",
-    summary_df$person_months[i],
-    summary_df$family_months[i],
-    summary_df$community_months[i]
-  )
-}
-
-df <- df[order(df$camellon_type), ]
-
-# Add total rows
-total_volume <- sum(combined$total_volume)
-total_quantity <- nrow(combined)
-
-add_row <- function(unit, div) {
-  # base values for this unit
-  person_min <- total_volume / 5 / div
-  person_max <- total_volume / 2.5 / div
-  family_min <- total_volume / 5 / 5 / div
-  family_max <- total_volume / 2.5 / 5 / div
-  community_min <- total_volume / 5 / sum(pop_est$pop) / 2 / div
-  community_max <- total_volume / 2.5 / sum(pop_est$pop) / 2 / div
-  
-  if (unit == "Months") {
-    # --- CHANGED: formatted months ---
-    person <- paste(fmt_month(person_min), "-", fmt_month(person_max))
-    family <- paste(fmt_month(family_min), "-", fmt_month(family_max))
-    community <- paste(fmt_month(community_min), "-", fmt_month(community_max))
-  } else {
-    person <- paste(round(person_min, 0), "-", round(person_max, 0))
-    family <- paste(round(family_min, 0), "-", round(family_max, 0))
-    community <- paste(round(community_min, 0), "-", round(community_max, 0))
+  for (label in names(stats)) {
+    volume <- stats[[label]]
+    person_min <- volume / 5
+    person_max <- volume / 2.5
+    family_min <- person_min / 5
+    family_max <- person_max / 5
+    community_min <- person_min / sum(pop_est$pop) / 2 
+    community_max <- person_max / sum(pop_est$pop) / 2 
+    
+    summary_df[nrow(summary_df) + 1, ] <- list(
+      camellon_type,
+      label,
+      smart_round(volume),
+      paste(smart_round(person_min), "-", smart_round(person_max)),
+      paste(smart_round(family_min), "-", smart_round(family_max)),
+      paste(smart_round(community_min), "-", smart_round(community_max))
+    )
   }
-  
-  df[nrow(df) + 1, ] <<- c(
-    ifelse(unit == "Days", "Total", ""), 
-    ifelse(unit == "Days", total_quantity, ""), 
-    ifelse(unit == "Days", round(total_volume, 0), ""),
-    unit, person, family, community
-  )
 }
 
-add_row("Days", 1)
-add_row("Weeks", 7)
-add_row("Months", 30)
+# Finalize table
+df <- summary_df
+names(df) <- c("camellon_type", "summary", "volume", "person", "family", "community")
+df <- df[order(df$camellon_type, df$summary), ]
+
+# Output table
+xtab <- xtable(df)
+print(xtab, include.rownames = FALSE)
 
 # Sort and output table
 write.csv(df, here("outputs","tables","table1.csv"))

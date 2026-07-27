@@ -33,7 +33,7 @@ for (polygon_id in unique_polygon_ids) {
   # Calculate volumes for each segment; height fixed at 140cm/2=70cm, based on exc data 
   group$segment_volume <- mapply(calculate_segment_volume, group$length, 1.4/2, group$width)
   
-  # Calculate the total volume and total area for the current polygon_id
+  # Calculate the total volume for the current polygon_id
   total_volume <- sum(group$segment_volume, na.rm = TRUE)
   total_length <- max(group$distance, na.rm = TRUE)
   
