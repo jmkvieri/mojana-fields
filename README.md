@@ -3,7 +3,7 @@
 This repository contains the data and scripts used in the manuscript:
 
 ```         
-  Vieri, J., Montejo Gaitán, F., Carrero-Pazos, M., Martinón-Torres, M., accepted. Collective labour and sustainability of pre-Hispanic field systems in La Mojana. Communications Sustainability.
+  Vieri, J., Montejo Gaitán, F., Carrero-Pazos, M., Martinón-Torres, M., 2026. Collective labour and sustainability of pre-Hispanic field systems in La Mojana. Communications Sustainability. https://doi.org/10.1038/s44458-026-00128-5
 
 ```
 
