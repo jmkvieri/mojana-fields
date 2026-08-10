@@ -20,7 +20,7 @@ from PyQt5.QtCore import QVariant
 project_path = os.path.dirname(QgsProject.instance().fileName())
 
 polygon_layer_path = os.path.join(project_path, "spatial_data", "shapefiles", "camellones", "camellones.shp")
-points_layer_path  = os.path.join(project_path, "outputs", "temp", "temp_shapefiles", "points_layer.shp")
+points_layer_path  = os.path.join(project_path, "outputs", "temp", "points_layer.shp")
 dem_raster_path = os.path.join(project_path, "spatial_data", "DEM", "DEM_fondodeadaptacion_without_water.tif")
 
 csv_output_path = os.path.join(project_path, "outputs", "data", "surviving_heights.csv")

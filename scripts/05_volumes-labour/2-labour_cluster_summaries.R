@@ -73,9 +73,5 @@ df <- summary_df
 names(df) <- c("camellon_type", "summary", "volume", "person", "family", "community")
 df <- df[order(df$camellon_type, df$summary), ]
 
-# Output table
-xtab <- xtable(df)
-print(xtab, include.rownames = FALSE)
-
 # Sort and output table
 write.csv(df, here("outputs","tables","table1.csv"))
